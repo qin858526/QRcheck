@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>比对历史记录查询</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .search-bar { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h2>比对历史记录查询</h2>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="搜索...">
+        <button onclick="filterTable()">搜索</button>
+    </div>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>二维码1</th>
+                <th>二维码2</th>
+                <th>时间</th>
+                <th>结果</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record[0] }}</td>    <!-- ID -->
+                <td>{{ record[1] }}</td>    <!-- 二维码1 -->
+                <td>{{ record[2] }}</td>    <!-- 二维码2 -->
+                <td>{{ record[3] }}</td>    <!-- 时间 -->
+                <td>{{ record[4] }}</td>    <!-- 结果 -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        function filterTable() {
+            var input = document.getElementById("searchInput").value.toLowerCase();
+            var table = document.getElementById("dataTable");
+            var trs = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+            for (var i = 0; i < trs.length; i++) {
+                var show = false;
+                var tds = trs[i].getElementsByTagName("td");
+                for (var j = 0; j < tds.length; j++) {
+                    if (tds[j].innerText.toLowerCase().indexOf(input) > -1) {
+                        show = true;
+                        break;
+                    }
+                }
+                trs[i].style.display = show ? "" : "none";
+            }
+        }
+    </script>
+    <button onclick="window.location.href='/'">返回扫码比对</button>
+</body>
+</html>
