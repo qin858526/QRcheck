@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>扫码比对</title>
+    </head>
+    <body>
+        <h2>请扫码</h2>
+        <h3>二维码1</h3>
+        <input type="text" id="code1" autocomplete="off">
+        <h3>二维码2</h3>
+        <input type="text" id="code2" autocomplete="off">
+        <div id="result"></div>
+        <script>
+            window.onload = ()=> document.getElementById("code1").focus();
+            document.getElementById("code1").addEventListener("keydown", (e)=>{
+                if(e.key === "Enter"){
+                    document.getElementById("code2").focus();
+                }
+            });
+            document.getElementById("code2").addEventListener("keydown", (e)=>{
+                if(e.key === "Enter"){
+                    fetch("/check", {
+                        method:"POST",
+                        headers:{"Content-Type":"application/json"},
+                        body: JSON.stringify({code1: document.getElementById("code1").value, code2: document.getElementById("code2").value})
+                    }).then(res=>res.json()).then(data=>{
+                        document.getElementById("result").innerText = data.msg;
+                        document.getElementById("result").style.color = data.ok ? "green" : "red";
+                        if(data.ok){
+                            document.getElementById("code1").value = "";
+                            document.getElementById("code2").value = "";
+                            document.getElementById("code1").focus();
+                            document.getElementById("result").innerText = "";
+                        }
+                        else{
+                            alert("比对失败，请重新扫码");
+                            document.getElementById("code1").value = "";
+                            document.getElementById("code2").value = "";
+                            document.getElementById("code1").focus();
+                            document.getElementById("result").innerText = "";
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+    </html>
