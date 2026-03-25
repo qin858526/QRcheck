@@ -49,7 +49,7 @@ def history():
     c.execute("SELECT id, code1, code2, timestamp, result FROM CheckResults ORDER BY timestamp DESC")
     records = c.fetchall()
     conn.close()
-    print("查询历史记录:", records)
+    # print("查询历史记录:", records)
     return render_template('history.html', records=records)
 
 # 记录比对结果到数据库
