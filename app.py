@@ -32,7 +32,7 @@ init_db()
 
 @app.route('/')
 def index():
-    return render_template('check.html')
+    return render_template('login.html')
 
 # 二维码比对逻辑
 @app.route('/check', methods=['POST'])
