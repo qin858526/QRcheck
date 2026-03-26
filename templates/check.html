@@ -1,99 +1,347 @@
 <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>扫码比对</title>
-    </head>
-    <body>
-        <style>
-            body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫码比对</title>
+    <style>
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 35px 30px;
+            text-align: center;
+        }
+        
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            padding: 40px 35px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group label::before {
+            content: "📱";
+            margin-right: 6px;
+        }
+        
+        .input-group:nth-child(2) label::before {
+            content: "📲";
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input[type="text"]::placeholder {
+            color: #adb5bd;
+        }
+        
+        #result {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #result.show {
+            display: block;
+        }
+        
+        #result.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        #result.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .button-group {
+            margin-top: 30px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            background: linear-gradient(135deg, #e0e7ff 0%, #f4f4f4 100%);
-            justify-content: center;
-            min-height: 100vh;
-            }
-            h2 {
-            color: #333;
-            margin-bottom: 20px;
-            }
-            h3 {
-            color: #555;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            }
-            input[type="text"] {
-            width: 300px;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-            }
-            #result {
-            margin-top: 20px;
-            font-weight: bold;
-            font-size: 18px;
-            }
-            button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 14px 30px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .history-btn {
+            background: linear-gradient(135deg, #20c997 0%, #12b886 100%);
+            color: white;
+        }
+        
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(32, 201, 151, 0.4);
+        }
+        
+        .history-btn:active {
+            transform: translateY(0);
+        }
+        
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
             }
-            button:hover {
-            background-color: #0056b3;
+            
+            .container {
+                border-radius: 12px;
             }
-        </style>
-        <h2>请扫码</h2>
-        <h3>二维码1</h3>
-        <input type="text" id="code1" autocomplete="off">
-        <h3>二维码2</h3>
-        <input type="text" id="code2" autocomplete="off">
-        <div id="result"></div>
-        <script>
-            window.onload = ()=> document.getElementById("code1").focus();
-            document.getElementById("code1").addEventListener("keydown", (e)=>{
-                if(e.key === "Enter"){
-                    document.getElementById("code2").focus();
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            h2 {
+                font-size: 22px;
+            }
+            
+            .form-container {
+                padding: 30px 20px;
+            }
+            
+            .input-group label {
+                font-size: 14px;
+            }
+            
+            input[type="text"] {
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+            
+            button {
+                font-size: 14px;
+                padding: 12px 25px;
+            }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔍 扫码比对</h2>
+            <p class="subtitle">请依次扫描两个二维码进行比对</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="input-group">
+                <label for="code1">二维码 1</label>
+                <input type="text" id="code1" autocomplete="off" placeholder="请扫描第一个二维码">
+            </div>
+            
+            <div class="input-group">
+                <label for="code2">二维码 2</label>
+                <input type="text" id="code2" autocomplete="off" placeholder="请扫描第二个二维码">
+            </div>
+            
+            <div id="result"></div>
+            
+            <div class="button-group">
+                <button class="submit-btn" onclick="checkCodes()">✅ 开始比对</button>
+                <button class="history-btn" onclick="window.location.href='/history'">📋 查看历史记录</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        window.onload = ()=> {
+            document.getElementById("code1").focus();
+        };
+        
+        document.getElementById("code1").addEventListener("keydown", (e)=>{
+            if(e.key === "Enter"){
+                document.getElementById("code2").focus();
+            }
+        });
+        
+        document.getElementById("code2").addEventListener("keydown", (e)=>{
+            if(e.key === "Enter"){
+                checkCodes();
+            }
+        });
+        
+        function checkCodes() {
+            fetch("/check", {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body: JSON.stringify({
+                    code1: document.getElementById("code1").value, 
+                    code2: document.getElementById("code2").value
+                })
+            }).then(res=>res.json()).then(data=>{
+                const resultDiv = document.getElementById("result");
+                
+                if(data.ok){
+                    resultDiv.innerHTML = '<span class="status-icon">✅</span>' + data.msg;
+                    resultDiv.className = "show success";
+                    
+                    setTimeout(() => {
+                        document.getElementById("code1").value = "";
+                        document.getElementById("code2").value = "";
+                        document.getElementById("code1").focus();
+                        resultDiv.className = "";
+                    }, 1500);
                 }
-            });
-            document.getElementById("code2").addEventListener("keydown", (e)=>{
-                if(e.key === "Enter"){
-                    fetch("/check", {
-                        method:"POST",
-                        headers:{"Content-Type":"application/json"},
-                        body: JSON.stringify({code1: document.getElementById("code1").value, code2: document.getElementById("code2").value})
-                    }).then(res=>res.json()).then(data=>{
-                        document.getElementById("result").innerText = data.msg;
-                        document.getElementById("result").style.color = data.ok ? "green" : "red";
-                        if(data.ok){
-                            document.getElementById("code1").value = "";
-                            document.getElementById("code2").value = "";
-                            document.getElementById("code1").focus();
-                            document.getElementById("result").innerText = "";
-                        }
-                        else{
-                            alert("比对失败，请重新扫码");
-                            document.getElementById("code1").value = "";
-                            document.getElementById("code2").value = "";
-                            document.getElementById("code1").focus();
-                            document.getElementById("result").innerText = "";
-                        }
-                    });
+                else{
+                    resultDiv.innerHTML = '<span class="status-icon">❌</span>' + data.msg;
+                    resultDiv.className = "show error";
+                    
+                    setTimeout(() => {
+                        alert("比对失败，请重新扫码");
+                        document.getElementById("code1").value = "";
+                        document.getElementById("code2").value = "";
+                        document.getElementById("code1").focus();
+                        resultDiv.className = "";
+                    }, 100);
                 }
+            }).catch(error => {
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = '<span class="status-icon">⚠️</span>网络错误，请稍后重试';
+                resultDiv.className = "show error";
+                
+                setTimeout(() => {
+                    resultDiv.className = "";
+                }, 3000);
             });
-        </script>
-        <button onclick="window.location.href='/history'">查看历史记录</button>
-    </body>
-    </html>
+        }
+    </script>
+</body>
+</html>
