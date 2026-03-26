@@ -318,7 +318,7 @@
                         document.getElementById("code2").value = "";
                         document.getElementById("code1").focus();
                         resultDiv.className = "";
-                    }, 1500);
+                    }, 0);
                 }
                 else{
                     resultDiv.innerHTML = '<span class="status-icon">❌</span>' + data.msg;
@@ -330,7 +330,7 @@
                         document.getElementById("code2").value = "";
                         document.getElementById("code1").focus();
                         resultDiv.className = "";
-                    }, 100);
+                    }, 0);
                 }
             }).catch(error => {
                 const resultDiv = document.getElementById("result");
@@ -339,7 +339,7 @@
                 
                 setTimeout(() => {
                     resultDiv.className = "";
-                }, 3000);
+                }, 0);
             });
         }
     </script>
