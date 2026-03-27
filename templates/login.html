@@ -126,10 +126,44 @@
             <button type="submit" class="login-btn">登 录</button>
         </form>
         
-        <div class="footer-links">
+        <!-- <div class="footer-links">
             <a href="#">忘记密码？</a> | 
             <a href="#">注册新账户</a>
-        </div>
+        </div> -->
     </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                // alert('{{ messages[0] }}');
+                document.getElementById("username").value = "";
+                document.getElementById("password").value = "";
+                var errorMsg = "{{ messages[0] }}";
+                var errorDiv = document.createElement("div");
+                errorDiv.style.color = "#dc3545";
+                errorDiv.style.textAlign = "center";
+                errorDiv.style.marginTop = "15px";
+                errorDiv.style.fontSize = "14px";
+                errorDiv.style.fontWeight = "500";
+                errorDiv.textContent = errorMsg;
+                
+                var form = document.querySelector("form");
+                form.parentNode.insertBefore(errorDiv, form.nextSibling);
+            </script>
+        {% endif %}
+    {% endwith %}
+
 </body>
+<script>
+    // function login_check_result() {
+    //     var result = "{{ login_result}}"
+    //     if (result == "ok") {
+    //         window.location.href = "/check";
+    //     } else {
+    //         alert('登录失败，请检查用户名或密码');
+    //         document.getElementById("username").value = "";
+    //         document.getElementById("password").value = "";
+    //     }
+    // }
+</script>
 </html>

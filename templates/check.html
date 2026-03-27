@@ -283,6 +283,39 @@
     
     <script>
         window.onload = ()=> {
+
+            // 在页面加载时获取并显示登录状态
+            fetch("/api/user_status")
+                .then(res => res.json())
+                .then(data => {
+                    let statusDiv = document.getElementById("login-status");
+                    if (!statusDiv) {
+                        statusDiv = document.createElement("div");
+                        statusDiv.id = "login-status";
+                        statusDiv.style.position = "absolute";
+                        statusDiv.style.top = "20px";
+                        statusDiv.style.right = "20px";
+                        statusDiv.style.background = "rgba(255, 255, 255, 0.9)";
+                        statusDiv.style.padding = "8px 16px";
+                        statusDiv.style.borderRadius = "20px";
+                        statusDiv.style.fontSize = "14px";
+                        statusDiv.style.fontWeight = "600";
+                        statusDiv.style.color = "#667eea";
+                        statusDiv.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                        statusDiv.style.zIndex = "1000";
+                        document.body.appendChild(statusDiv);
+                    }
+                    
+                    if (data.status) {
+                        statusDiv.innerHTML = `👤 ${data.username || '用户'} | <a href="/logout" style="color:#dc3545;text-decoration:none;margin-left:5px;">退出</a>`;
+                    } else {
+                        window.location.href = "/login";
+                    }
+                })
+                .catch(err => {
+                    console.error("获取登录状态失败", err);
+                });
+
             document.getElementById("code1").focus();
         };
         
@@ -341,6 +374,10 @@
                     resultDiv.className = "";
                 }, 0);
             });
+        }
+
+        function goBack() {
+            window.location.href = '/login';
         }
     </script>
 </body>
