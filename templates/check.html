@@ -260,19 +260,31 @@
             <h2>🔍 扫码比对</h2>
             <p class="subtitle">请依次扫描两个二维码进行比对</p>
         </div>
-        
-        <div class="form-container">
+
+            <div class="form-container">
+                <div class="input-group">
+                    <label for="code">二维码</label>
+                    <input type="text" id="code" autocomplete="off" placeholder="请扫描二维码">
+            </div>
             <div class="input-group">
-                <label for="code1">二维码 1</label>
-                <input type="text" id="code1" autocomplete="off" placeholder="请扫描第一个二维码">
+                <label>📋 已扫描列表</label>
+                <div id="scan-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; background: #f8f9fa; font-size: 14px; color: #495057; line-height: 0.5;">
+                    <span style="color: #adb5bd; font-style: italic;"></span>
+                </div>
+            </div>
+            <!-- <div class="form-container">
+                <div class="input-group">
+                    <label for="code1">二维码 1</label>
+                    <input type="text" id="code1" autocomplete="off" placeholder="请扫描第一个二维码">
             </div>
             
             <div class="input-group">
                 <label for="code2">二维码 2</label>
                 <input type="text" id="code2" autocomplete="off" placeholder="请扫描第二个二维码">
-            </div>
+            </div> -->
             
             <div id="result"></div>
+            
             
             <div class="button-group">
                 <button class="submit-btn" onclick="checkCodes()">✅ 开始比对</button>
@@ -283,7 +295,10 @@
     
     <script>
         window.onload = ()=> {
-
+            qr_list1 = [];
+            qr_list2 = [];
+            document.getElementById("code").focus();
+            document.getElementById("scan-list").innerHTML = '<span style="color: #adb5bd; font-style: italic;"></span>';
             // 在页面加载时获取并显示登录状态
             fetch("/api/user_status")
                 .then(res => res.json())
@@ -305,7 +320,7 @@
                         statusDiv.style.zIndex = "1000";
                         document.body.appendChild(statusDiv);
                     }
-                    
+                    // 登录状态检查
                     if (data.status) {
                         statusDiv.innerHTML = `👤 ${data.username || '用户'} | <a href="/logout" style="color:#dc3545;text-decoration:none;margin-left:5px;">退出</a>`;
                     } else {
@@ -316,28 +331,38 @@
                     console.error("获取登录状态失败", err);
                 });
 
-            document.getElementById("code1").focus();
         };
         
-        document.getElementById("code1").addEventListener("keydown", (e)=>{
+        document.getElementById("code").addEventListener("keydown", (e)=>{
             if(e.key === "Enter"){
-                document.getElementById("code2").focus();
+                console.log("打印二维码内容：", document.getElementById("code").value)
+                document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
+                if (document.getElementById("code").value.includes("|")) {
+                    qr_list1.push(document.getElementById("code").value.split("|")[0])
+                }
+                else {
+                    qr_list2.push(document.getElementById("code").value)
+                }
+                document.getElementById("code").value = ""
+                }
             }
-        });
+        );
         
-        document.getElementById("code2").addEventListener("keydown", (e)=>{
-            if(e.key === "Enter"){
-                checkCodes();
-            }
-        });
+        // document.getElementById("code2").addEventListener("keydown", (e)=>{
+        //     if(e.key === "Enter"){
+        //         checkCodes();
+        //     }
+        // });
         
         function checkCodes() {
             fetch("/check", {
                 method:"POST",
                 headers:{"Content-Type":"application/json"},
                 body: JSON.stringify({
-                    code1: document.getElementById("code1").value, 
-                    code2: document.getElementById("code2").value
+                    qr_list1: qr_list1, 
+                    qr_list2: qr_list2
+                    // code1: document.getElementById("code1").value, 
+                    // code2: document.getElementById("code2").value
                 })
             }).then(res=>res.json()).then(data=>{
                 const resultDiv = document.getElementById("result");
@@ -347,11 +372,11 @@
                     resultDiv.className = "show success";
                     
                     setTimeout(() => {
-                        document.getElementById("code1").value = "";
-                        document.getElementById("code2").value = "";
-                        document.getElementById("code1").focus();
+                        // document.getElementById("code1").value = "";
+                        // document.getElementById("code2").value = "";
+                        document.getElementById("code").focus();
                         resultDiv.className = "";
-                    }, 0);
+                    }, 1000);
                 }
                 else{
                     resultDiv.innerHTML = '<span class="status-icon">❌</span>' + data.msg;
@@ -359,9 +384,9 @@
                     
                     setTimeout(() => {
                         alert("比对失败，请重新扫码");
-                        document.getElementById("code1").value = "";
-                        document.getElementById("code2").value = "";
-                        document.getElementById("code1").focus();
+                        // document.getElementById("code1").value = "";
+                        // document.getElementById("code2").value = "";
+                        document.getElementById("code").focus();
                         resultDiv.className = "";
                     }, 0);
                 }
@@ -374,6 +399,7 @@
                     resultDiv.className = "";
                 }, 0);
             });
+            document.getElementById("scan-list").innerHTML = '<span style="color: #adb5bd; font-style: italic;"></span>';
         }
 
         function goBack() {

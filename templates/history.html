@@ -339,7 +339,152 @@
             </div>
             {% endif %}
         </div>
-        
+        <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding: 10px;">
+            <button id="prevPage" onclick="changePage(-1)" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;" disabled>上一页</button>
+            <span id="pageInfo" style="font-size: 14px; color: #495057; font-weight: 600;">第 1 页 / 共 1 页</span>
+            <button id="nextPage" onclick="changePage(1)" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;" disabled>下一页</button>
+        </div>
+
+        <script>
+            // 分页配置
+            const ITEMS_PER_PAGE = 10;
+            let currentPage = 1;
+            let allRows = [];
+            let filteredRows = [];
+
+            // 初始化分页
+            function initPagination() {
+                const table = document.getElementById("dataTable");
+                const tbody = table.getElementsByTagName("tbody")[0];
+                allRows = Array.from(tbody.getElementsByTagName("tr"));
+                filteredRows = [...allRows];
+                
+                if (allRows.length === 0) {
+                    document.querySelector('.pagination-container').style.display = 'none';
+                    return;
+                }
+                
+                // 初始化时渲染第一页
+                renderPage(1);
+                
+                // 绑定页码跳转事件
+                const pageJumpInput = document.getElementById('pageJumpInput');
+                const pageJumpBtn = document.getElementById('pageJumpBtn');
+                
+                if (pageJumpBtn) {
+                    pageJumpBtn.addEventListener('click', function() {
+                        const pageNum = parseInt(pageJumpInput.value);
+                        const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
+                        
+                        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+                            renderPage(pageNum);
+                            pageJumpInput.value = ''; // 清空输入框
+                        } else {
+                            alert(`请输入有效的页码 (1-${totalPages})`);
+                        }
+                    });
+                }
+                
+                if (pageJumpInput) {
+                    pageJumpInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            pageJumpBtn.click();
+                        }
+                    });
+                }
+            }
+
+            // 渲染指定页
+            function renderPage(page) {
+                const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
+                
+                if (page < 1) page = 1;
+                if (page > totalPages) page = totalPages;
+                
+                currentPage = page;
+                
+                // 隐藏所有行
+                filteredRows.forEach(row => row.style.display = 'none');
+                
+                // 显示当前页的行
+                const start = (page - 1) * ITEMS_PER_PAGE;
+                const end = Math.min(start + ITEMS_PER_PAGE, filteredRows.length);
+                
+                for (let i = start; i < end; i++) {
+                    filteredRows[i].style.display = '';
+                }
+                
+                // 更新页码信息
+                document.getElementById('pageInfo').textContent = `第 ${page} 页 / 共 ${totalPages} 页`;
+                
+                // 更新按钮状态
+                document.getElementById('prevPage').disabled = page === 1;
+                document.getElementById('nextPage').disabled = page === totalPages;
+                
+                // 更新按钮样式
+                const prevBtn = document.getElementById('prevPage');
+                const nextBtn = document.getElementById('nextPage');
+                
+                prevBtn.style.opacity = page === 1 ? '0.5' : '1';
+                prevBtn.style.cursor = page === 1 ? 'not-allowed' : 'pointer';
+                
+                nextBtn.style.opacity = page === totalPages ? '0.5' : '1';
+                nextBtn.style.cursor = page === totalPages ? 'not-allowed' : 'pointer';
+            }
+
+            // 切换页面
+            function changePage(delta) {
+                const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
+                const newPage = currentPage + delta;
+                
+                if (newPage >= 1 && newPage <= totalPages) {
+                    renderPage(newPage);
+                }
+            }
+
+            // 重写过滤函数以支持分页
+            function filterTable() {
+                var input = document.getElementById("searchInput").value.toLowerCase();
+                var table = document.getElementById("dataTable");
+                var tbody = table.getElementsByTagName("tbody")[0];
+                var trs = tbody.getElementsByTagName("tr");
+                
+                filteredRows = [];
+                
+                for (var i = 0; i < trs.length; i++) {
+                    var show = false;
+                    var tds = trs[i].getElementsByTagName("td");
+                    for (var j = 0; j < tds.length; j++) {
+                        if (tds[j].innerText.toLowerCase().indexOf(input) > -1) {
+                            show = true;
+                            break;
+                        }
+                    }
+                    
+                    if (show) {
+                        filteredRows.push(trs[i]);
+                    }
+                }
+                
+                // 重置到第一页
+                currentPage = 1;
+                
+                if (filteredRows.length === 0) {
+                    // 如果没有搜索结果，隐藏所有行
+                    allRows.forEach(row => row.style.display = 'none');
+                    document.getElementById('pageInfo').textContent = '第 0 页 / 共 0 页';
+                    document.getElementById('prevPage').disabled = true;
+                    document.getElementById('nextPage').disabled = true;
+                } else {
+                    renderPage(1);
+                }
+            }
+
+            // 页面加载完成后初始化分页
+            document.addEventListener('DOMContentLoaded', function() {
+                initPagination();
+            });
+        </script>
         <div class="back-btn-container">
             <button class="back-btn" onclick="window.location.href='/check'">← 返回扫码比对</button>
         </div>
@@ -383,22 +528,22 @@
 
         };
 
-        function filterTable() {
-            var input = document.getElementById("searchInput").value.toLowerCase();
-            var table = document.getElementById("dataTable");
-            var trs = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-            for (var i = 0; i < trs.length; i++) {
-                var show = false;
-                var tds = trs[i].getElementsByTagName("td");
-                for (var j = 0; j < tds.length; j++) {
-                    if (tds[j].innerText.toLowerCase().indexOf(input) > -1) {
-                        show = true;
-                        break;
-                    }
-                }
-                trs[i].style.display = show ? "" : "none";
-            }
-        }
+        // function filterTable() {
+        //     var input = document.getElementById("searchInput").value.toLowerCase();
+        //     var table = document.getElementById("dataTable");
+        //     var trs = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+        //     for (var i = 0; i < trs.length; i++) {
+        //         var show = false;
+        //         var tds = trs[i].getElementsByTagName("td");
+        //         for (var j = 0; j < tds.length; j++) {
+        //             if (tds[j].innerText.toLowerCase().indexOf(input) > -1) {
+        //                 show = true;
+        //                 break;
+        //             }
+        //         }
+        //         trs[i].style.display = show ? "" : "none";
+        //     }
+        // }
         
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {

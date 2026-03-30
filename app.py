@@ -40,6 +40,9 @@ def init_db():
     c.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('admin', 'admin')")
     c.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('1', '1')")
     c.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('2', '2')")
+    c.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('3', '3')")
+    c.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('4', '4')")
+    c.execute("INSERT OR IGNORE INTO Users (username, password) VALUES ('5', '5')")
 
     conn.commit()
     conn.close()
@@ -63,8 +66,8 @@ def login():
     c = conn.cursor()
     c.execute("SELECT password FROM Users WHERE username = ?", (username,))
     result = c.fetchone()
-    c.execute("SELECT username FROM Users")
-    print("查询密码:", c.fetchall())
+    c.execute("SELECT username, password FROM Users")
+    print("查询账号密码:", c.fetchall())
     conn.close()
     
     if result and result[0] == password:
@@ -86,15 +89,16 @@ def check_page():
 @app.route('/check', methods=['POST'])
 def check():
     try:
-        code1 = request.json.get("code1", "")
-        code2 = request.json.get("code2", "")
-        if code1 and code2:
-            if "|" in code1:
-                code1 = code1.split("|")[0]
-            if "|" in code2:
-                code2 = code2.split("|")[0]
-        ok = code1 == code2 and code1 != "" 
-        log_check_result(code1, code2, "有效" if ok else "无效", username=session.get('username'))
+        qr_list1 = request.json.get("qr_list1", [])
+        qr_list2 = request.json.get("qr_list2", [])
+        # code1 = request.json.get("code1", "")
+        # code2 = request.json.get("code2", "")
+        if qr_list1 == qr_list2:
+            ok = True and qr_list1 != [] and qr_list2 != []
+        else:
+            ok = False
+
+        log_check_result(qr_list1, qr_list2, "有效" if ok else "无效", username=session.get('username'))
         return jsonify({"ok": ok, "msg": "✅ 有效" if ok else "❌ 无效"})
     except Exception as e:
         logging.error(f"比对出错：{str(e)}", exc_info=True)
@@ -117,6 +121,10 @@ def log_check_result(code1, code2, result, username):
     c = conn.cursor()
     beijing_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # print("记录比对结果:", code1, code2, result)
+    if isinstance(code1, list):
+        code1 = ','.join(code1)
+    if isinstance(code2, list):
+        code2 = ','.join(code2)
     c.execute("INSERT INTO CheckResults (code1, code2, result, timestamp, username) VALUES (?, ?, ?, ?, ?)", (code1, code2, result, beijing_time, username))
     conn.commit()
     conn.close()
