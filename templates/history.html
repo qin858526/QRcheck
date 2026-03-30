@@ -301,7 +301,7 @@
         </div>
         
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="🔍 搜索记录（支持 ID、二维码内容、时间等）">
+            <input type="text" id="searchInput" placeholder="🔍 搜索记录（二维码内容）">
             <button onclick="filterTable()">搜 索</button>
         </div>
         
@@ -346,13 +346,11 @@
         </div>
 
         <script>
-            // 分页配置
             const ITEMS_PER_PAGE = 10;
             let currentPage = 1;
             let allRows = [];
             let filteredRows = [];
 
-            // 初始化分页
             function initPagination() {
                 const table = document.getElementById("dataTable");
                 const tbody = table.getElementsByTagName("tbody")[0];
@@ -364,37 +362,9 @@
                     return;
                 }
                 
-                // 初始化时渲染第一页
                 renderPage(1);
-                
-                // 绑定页码跳转事件
-                const pageJumpInput = document.getElementById('pageJumpInput');
-                const pageJumpBtn = document.getElementById('pageJumpBtn');
-                
-                if (pageJumpBtn) {
-                    pageJumpBtn.addEventListener('click', function() {
-                        const pageNum = parseInt(pageJumpInput.value);
-                        const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
-                        
-                        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
-                            renderPage(pageNum);
-                            pageJumpInput.value = ''; // 清空输入框
-                        } else {
-                            alert(`请输入有效的页码 (1-${totalPages})`);
-                        }
-                    });
-                }
-                
-                if (pageJumpInput) {
-                    pageJumpInput.addEventListener('keypress', function(e) {
-                        if (e.key === 'Enter') {
-                            pageJumpBtn.click();
-                        }
-                    });
-                }
             }
 
-            // 渲染指定页
             function renderPage(page) {
                 const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
                 
@@ -403,10 +373,8 @@
                 
                 currentPage = page;
                 
-                // 隐藏所有行
-                filteredRows.forEach(row => row.style.display = 'none');
+                allRows.forEach(row => row.style.display = 'none');
                 
-                // 显示当前页的行
                 const start = (page - 1) * ITEMS_PER_PAGE;
                 const end = Math.min(start + ITEMS_PER_PAGE, filteredRows.length);
                 
@@ -414,25 +382,51 @@
                     filteredRows[i].style.display = '';
                 }
                 
-                // 更新页码信息
                 document.getElementById('pageInfo').textContent = `第 ${page} 页 / 共 ${totalPages} 页`;
                 
-                // 更新按钮状态
                 document.getElementById('prevPage').disabled = page === 1;
                 document.getElementById('nextPage').disabled = page === totalPages;
                 
-                // 更新按钮样式
                 const prevBtn = document.getElementById('prevPage');
                 const nextBtn = document.getElementById('nextPage');
                 
                 prevBtn.style.opacity = page === 1 ? '0.5' : '1';
+                // 页码跳转输入框
+                let pageJumpInput = document.getElementById('pageJumpInput');
+                if (!pageJumpInput) {
+                    pageJumpInput = document.createElement('input');
+                    pageJumpInput.type = 'number';
+                    pageJumpInput.id = 'pageJumpInput';
+                    pageJumpInput.min = 1;
+                    pageJumpInput.style.width = '60px';
+                    pageJumpInput.style.margin = '0 8px';
+                    pageJumpInput.style.padding = '6px 8px';
+                    pageJumpInput.style.border = '1px solid #dee2e6';
+                    pageJumpInput.style.borderRadius = '4px';
+                    pageJumpInput.style.fontSize = '14px';
+                    pageJumpInput.placeholder = '页码';
+                    const pageInfo = document.getElementById('pageInfo');
+                    pageInfo.parentNode.insertBefore(pageJumpInput, pageInfo.nextSibling);
+
+                    pageJumpInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            let val = parseInt(pageJumpInput.value);
+                            const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
+                            if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                                renderPage(val);
+                            }
+                        }
+                    });
+                }
+                // 更新最大页码
+                pageJumpInput.max = totalPages;
+                pageJumpInput.value = page;
                 prevBtn.style.cursor = page === 1 ? 'not-allowed' : 'pointer';
                 
                 nextBtn.style.opacity = page === totalPages ? '0.5' : '1';
                 nextBtn.style.cursor = page === totalPages ? 'not-allowed' : 'pointer';
             }
 
-            // 切换页面
             function changePage(delta) {
                 const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
                 const newPage = currentPage + delta;
@@ -442,35 +436,34 @@
                 }
             }
 
-            // 重写过滤函数以支持分页
             function filterTable() {
                 var input = document.getElementById("searchInput").value.toLowerCase();
-                var table = document.getElementById("dataTable");
-                var tbody = table.getElementsByTagName("tbody")[0];
-                var trs = tbody.getElementsByTagName("tr");
+                // var table = document.getElementById("dataTable");
+                // var tbody = table.getElementsByTagName("tbody")[0];
+                // var trs = tbody.getElementsByTagName("tr");
                 
                 filteredRows = [];
                 
-                for (var i = 0; i < trs.length; i++) {
+                for (var i = 0; i < allRows.length; i++) {
                     var show = false;
-                    var tds = trs[i].getElementsByTagName("td");
-                    for (var j = 0; j < tds.length; j++) {
-                        if (tds[j].innerText.toLowerCase().indexOf(input) > -1) {
+                    var tds = allRows[i].getElementsByTagName("td");
+                    if (tds.length >= 3) {
+                        var qr1 = tds[1].innerText.toLowerCase();
+                        var qr2 = tds[2].innerText.toLowerCase();
+                        
+                        if (qr1.indexOf(input) > -1 || qr2.indexOf(input) > -1) {
                             show = true;
-                            break;
                         }
                     }
                     
                     if (show) {
-                        filteredRows.push(trs[i]);
+                        filteredRows.push(allRows[i]);
                     }
                 }
                 
-                // 重置到第一页
                 currentPage = 1;
                 
                 if (filteredRows.length === 0) {
-                    // 如果没有搜索结果，隐藏所有行
                     allRows.forEach(row => row.style.display = 'none');
                     document.getElementById('pageInfo').textContent = '第 0 页 / 共 0 页';
                     document.getElementById('prevPage').disabled = true;
@@ -480,7 +473,6 @@
                 }
             }
 
-            // 页面加载完成后初始化分页
             document.addEventListener('DOMContentLoaded', function() {
                 initPagination();
             });
@@ -491,10 +483,7 @@
     </div>
     
     <script>
-
         window.onload = ()=> {
-
-            // 在页面加载时获取并显示登录状态
             fetch("/api/user_status")
                 .then(res => res.json())
                 .then(data => {
@@ -515,7 +504,6 @@
                         statusDiv.style.zIndex = "1000";
                         document.body.appendChild(statusDiv);
                     }
-                    // console.log("登录状态：", data.status);
                     if (data.status) {
                         statusDiv.innerHTML = `👤 ${data.username || '用户'} | <a href="/logout" style="color:#dc3545;text-decoration:none;margin-left:5px;">退出</a>`;
                     } else {
@@ -525,26 +513,8 @@
                 .catch(err => {
                     console.error("获取登录状态失败", err);
                 });
-
         };
 
-        // function filterTable() {
-        //     var input = document.getElementById("searchInput").value.toLowerCase();
-        //     var table = document.getElementById("dataTable");
-        //     var trs = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-        //     for (var i = 0; i < trs.length; i++) {
-        //         var show = false;
-        //         var tds = trs[i].getElementsByTagName("td");
-        //         for (var j = 0; j < tds.length; j++) {
-        //             if (tds[j].innerText.toLowerCase().indexOf(input) > -1) {
-        //                 show = true;
-        //                 break;
-        //             }
-        //         }
-        //         trs[i].style.display = show ? "" : "none";
-        //     }
-        // }
-        
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 filterTable();
