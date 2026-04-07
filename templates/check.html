@@ -335,13 +335,23 @@
         
         document.getElementById("code").addEventListener("keydown", (e)=>{
             if(e.key === "Enter"){
-                console.log("打印二维码内容：", document.getElementById("code").value)
-                document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
+                // console.log("打印二维码内容：", document.getElementById("code").value)
                 if (document.getElementById("code").value.includes("|")) {
-                    qr_list1.push(document.getElementById("code").value.split("|")[0])
+                    if (qr_list1.includes(document.getElementById("code").value.split("|")[0])) {
+                        console.log("请勿重复扫描同一二维码");
+                    } else {
+                        document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
+                        qr_list1.push(document.getElementById("code").value.split("|")[0])
+                    }
+                    
                 }
                 else {
-                    qr_list2.push(document.getElementById("code").value)
+                    if (qr_list2.includes(document.getElementById("code").value)) {
+                        console.log("请勿重复扫描同一二维码");
+                    } else {
+                        document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
+                        qr_list2.push(document.getElementById("code").value)
+                    }
                 }
                 document.getElementById("code").value = ""
                 }
