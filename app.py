@@ -93,7 +93,7 @@ def check():
         qr_list2 = request.json.get("qr_list2", [])
         # code1 = request.json.get("code1", "")
         # code2 = request.json.get("code2", "")
-        if qr_list1 == qr_list2:
+        if set(qr_list1) == set(qr_list2):
             ok = True and qr_list1 != [] and qr_list2 != []
         else:
             ok = False
@@ -146,5 +146,5 @@ def logout():
     return redirect(url_for('login_page'))
 
 if __name__ == '__main__':
-    serve(app, host='0.0.0.0', port=8888)
-    # app.run(debug=True, host='0.0.0.0', port=8888)
+    # serve(app, host='0.0.0.0', port=8888)
+    app.run(debug=True, host='0.0.0.0', port=8888)
