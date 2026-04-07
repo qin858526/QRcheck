@@ -481,7 +481,174 @@
             <button class="back-btn" onclick="window.location.href='/check'">← 返回扫码比对</button>
         </div>
     </div>
-    
+    <script>
+(function() {
+    const filterState = { query: '', user: '', result: '' };
+    const columnIndex = { user: 4, result: 5 };
+    const headerConfig = [
+        { key: 'user', title: '操作用户' },
+        { key: 'result', title: '结果' }
+    ];
+
+    function injectStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .header-filter-wrapper { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+            .header-filter-label { cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+            .header-filter-arrow { transition: transform .25s ease; font-size: 12px; }
+            .header-filter-dropdown { position: absolute; top: calc(100% + 8px); right: 0; left: 0; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 12px 24px rgba(0,0,0,.12); z-index: 20; max-height: 260px; overflow: auto; display: none; }
+            .header-filter-dropdown.visible { display: block; }
+            .header-filter-dropdown button { width: 100%; padding: 10px 12px; border: none; background: transparent; text-align: left; font-size: 13px; color: #495057; cursor: pointer; }
+            .header-filter-dropdown button:hover { background: #f8f9ff; }
+            .header-filter-dropdown button.active { background: #eff2ff; font-weight: 700; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function findHeaderCell(title) {
+        const headers = document.querySelectorAll('#dataTable thead th');
+        return Array.from(headers).find(th => th.textContent.trim().startsWith(title));
+    }
+
+    function getUniqueValues(key) {
+        const idx = columnIndex[key];
+        const set = new Set();
+        Array.from(document.querySelectorAll('#dataTable tbody tr')).forEach(row => {
+            const cell = row.cells[idx];
+            if (cell) set.add(cell.innerText.trim());
+        });
+        return ['全部', ...Array.from(set).sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'))];
+    }
+
+    function updateHeaderLabels() {
+        headerConfig.forEach(cfg => {
+            const th = findHeaderCell(cfg.title);
+            const label = th?.querySelector('.header-filter-label');
+            if (label) {
+                const value = filterState[cfg.key] || '全部';
+                label.firstChild.textContent = `${cfg.title}：${value}`;
+            }
+        });
+    }
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.header-filter-dropdown.visible').forEach(dropdown => {
+            dropdown.classList.remove('visible');
+            const arrow = dropdown.parentElement?.querySelector('.header-filter-arrow');
+            if (arrow) arrow.style.transform = '';
+        });
+    }
+
+    function buildDropdown(th, cfg) {
+        th.style.position = 'relative';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'header-filter-wrapper';
+        const label = document.createElement('span');
+        label.className = 'header-filter-label';
+        label.innerHTML = `<span>${cfg.title}：全部</span><span class="header-filter-arrow">▾</span>`;
+        const dropdown = document.createElement('div');
+        dropdown.className = 'header-filter-dropdown';
+        wrapper.append(label, dropdown);
+        th.textContent = '';
+        th.appendChild(wrapper);
+
+        label.addEventListener('click', event => {
+            event.stopPropagation();
+            closeAllDropdowns();
+            dropdown.classList.toggle('visible');
+            const arrow = label.querySelector('.header-filter-arrow');
+            if (dropdown.classList.contains('visible')) arrow.style.transform = 'rotate(180deg)';
+            else arrow.style.transform = '';
+        });
+
+        populateDropdown(cfg.key, dropdown);
+    }
+
+    function populateDropdown(key, dropdown) {
+        dropdown.innerHTML = '';
+        getUniqueValues(key).forEach(value => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = value;
+            if ((!filterState[key] && value === '全部') || filterState[key] === value) {
+                button.classList.add('active');
+            }
+            button.addEventListener('click', event => {
+                event.stopPropagation();
+                filterState[key] = value === '全部' ? '' : value;
+                updateHeaderLabels();
+                closeAllDropdowns();
+                applyFilters();
+            });
+            dropdown.appendChild(button);
+        });
+    }
+
+    function applyFilters() {
+        const searchValue = filterState.query.toLowerCase();
+        filteredRows = [];
+        allRows.forEach(row => {
+            const cells = row.getElementsByTagName('td');
+            const qr1 = (cells[1]?.innerText || '').toLowerCase();
+            const qr2 = (cells[2]?.innerText || '').toLowerCase();
+            const user = (cells[columnIndex.user]?.innerText || '').trim();
+            const result = (cells[columnIndex.result]?.innerText || '').trim();
+            const matchesSearch = !searchValue || qr1.includes(searchValue) || qr2.includes(searchValue);
+            const matchesUser = !filterState.user || user === filterState.user;
+            const matchesResult = !filterState.result || result === filterState.result;
+            if (matchesSearch && matchesUser && matchesResult) {
+                filteredRows.push(row);
+            }
+        });
+
+        currentPage = 1;
+        if (filteredRows.length === 0) {
+            allRows.forEach(row => row.style.display = 'none');
+            document.getElementById('pageInfo').textContent = '第 0 页 / 共 0 页';
+            document.getElementById('prevPage').disabled = true;
+            document.getElementById('nextPage').disabled = true;
+            document.getElementById('prevPage').style.opacity = '0.5';
+            document.getElementById('nextPage').style.opacity = '0.5';
+            return;
+        }
+        renderPage(1);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        injectStyles();
+        const table = document.getElementById('dataTable');
+        const tbody = table?.querySelector('tbody');
+        allRows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+
+        headerConfig.forEach(cfg => {
+            const th = findHeaderCell(cfg.title);
+            if (th) buildDropdown(th, cfg);
+        });
+
+        updateHeaderLabels();
+
+        const input = document.getElementById('searchInput');
+        if (input) {
+            input.addEventListener('input', () => {
+                filterState.query = input.value;
+            });
+        }
+
+        window.filterTable = function() {
+            filterState.query = document.getElementById('searchInput')?.value || '';
+            applyFilters();
+        };
+
+        const oldInit = window.initPagination;
+        window.initPagination = function() {
+            if (typeof oldInit === 'function') oldInit();
+            updateHeaderLabels();
+        };
+
+        document.addEventListener('click', closeAllDropdowns);
+    });
+})();
+</script>
     <script>
         window.onload = ()=> {
             fetch("/api/user_status")
