@@ -145,6 +145,13 @@ def logout():
     session.pop('login_time', None)
     return redirect(url_for('login_page'))
 
+@app.route('/debug', methods=['POST'])
+def debug():
+    print("收到调试请求")
+    data = request.get_json()
+    print(data['msg'])      # 这句就是输出到 VS Code 终端
+    return 'ok'
+
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=8888)
     # app.run(debug=True, host='0.0.0.0', port=8888)
