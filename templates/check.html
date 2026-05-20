@@ -290,19 +290,13 @@
             
             
             <div class="button-group">
-                <!--label中显示需要出货的数量，这里用下面js中定义的变量qtycodesum-->
-                <label>需要出货的数量：<span id="qtycodesum"></span></label>
-                <label>需要扫描的二维码数量：<span id="codesum"></span></label>
-                <button class="submit-btn" onclick="qtycodesum = StartProcess();">✅ 开始比对</button>
+                <button class="submit-btn" onclick="checkCodes();">✅ 开始比对</button>
                 <button class="history-btn" onclick="window.location.href='/history'">📋 查看历史记录</button>
             </div>
         </div>
     </div>
     
     <script>
-        let codesum = 0;
-        let qtycodesum = 0;
-        let buttonactive = false;
         window.onload = ()=> {
             qr_list1 = [];
             qr_list2 = [];
@@ -346,18 +340,12 @@
         document.getElementById("code").addEventListener("keydown", (e)=>{
             if(e.key === "Enter"){
                 // console.log("打印二维码内容：", document.getElementById("code").value)
-                if (qtycodesum === null || qtycodesum === "" || qtycodesum === 0)  {
-                    alert("请先点击“开始比对”按钮，输入需要出货的数量");
-                    document.getElementById("code").value = ""
-                    return;
-                }
                 if (document.getElementById("code").value.includes("|")) {
                     if (qr_list1.includes(document.getElementById("code").value.split("|")[0])) {
                         console.log("请勿重复扫描同一二维码");
                     } else {
                         document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
                         qr_list1.push(document.getElementById("code").value.split("|")[0])
-                        codesum++;
                     }
                     
                 }
@@ -367,16 +355,9 @@
                     } else {
                         document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
                         qr_list2.push(document.getElementById("code").value)
-                        codesum++;
                     }
                 }
                 document.getElementById("code").value = ""
-                debug("当前codesum：" + codesum);
-                debug("qtycodesum：" + qtycodesum);
-                if (codesum === qtycodesum) {
-                    debug(codesum);
-                    checkCodes();
-                }
             }
             
         }
@@ -389,7 +370,7 @@
         // });
         
         function StartProcess(){
-            codesum = 0;
+            const codesum = 0;
             // 弹出一个输入框，要求用户输入本次出货的数量
             let qty = prompt("请输入本次出货的数量");
             if(qty === null || qty === ""){
@@ -407,14 +388,10 @@
                 alert("请输入非负数");
                 return;
             }
-            document.getElementById("qtycodesum").innerHTML = qty;
-            document.getElementById("codesum").innerHTML = qty*2;
             return qty*2;
         }
 
         function checkCodes() {
-            document.getElementById("qtycodesum").innerHTML = "";
-            document.getElementById("codesum").innerHTML = "";
             fetch("/check", {
                 method:"POST",
                 headers:{"Content-Type":"application/json"},
@@ -431,7 +408,6 @@
                     resultDiv.innerHTML = '<span class="status-icon">✅</span>' + data.msg;
                     resultDiv.className = "show success";
                     codesum = 0;
-                    qtycodesum = 0;
                     setTimeout(() => {
                         // document.getElementById("code1").value = "";
                         // document.getElementById("code2").value = "";
@@ -443,7 +419,6 @@
                 else{
                     playBeep();
                     codesum = 0;
-                    qtycodesum = 0;
                     resultDiv.innerHTML = '<span class="status-icon">❌</span>' + data.msg;
                     resultDiv.className = "show error";
                     document.getElementById("code").blur();
