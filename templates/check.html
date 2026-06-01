@@ -346,6 +346,7 @@
                     } else {
                         document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
                         qr_list1.push(document.getElementById("code").value.split("|")[0])
+                        debug("qr_list1:" + qr_list1)
                     }
                     
                 }
@@ -355,6 +356,7 @@
                     } else {
                         document.getElementById("scan-list").innerHTML += `<span style="color: #495057;">${document.getElementById("code").value}</span><br></br>`
                         qr_list2.push(document.getElementById("code").value)
+                        debug("qr_list2:" + qr_list2)
                     }
                 }
                 document.getElementById("code").value = ""

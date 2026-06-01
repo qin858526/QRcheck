@@ -117,16 +117,40 @@ def history():
 
 # 记录比对结果到数据库
 def log_check_result(code1, code2, result, username):
+    """记录二维码比对结果到数据库
+    
+    将比对结果（包括两组二维码数据、比对结果、时间戳和用户名）插入到数据库中。
+    如果输入的二维码数据是列表类型，会先将其转换为逗号分隔的字符串。
+    
+    Args:
+        code1 (list or str): 第一组二维码数据，可以是列表或字符串
+        code2 (list or str): 第二组二维码数据，可以是列表或字符串
+        result (str): 比对结果，通常为"有效"或"无效"
+        username (str): 当前用户的用户名
+    
+    Returns:
+        None
+    """
+    # 连接SQLite数据库
     conn = sqlite3.connect('CheckResult.db')
+    # 创建游标对象
     c = conn.cursor()
+    # 获取当前时间（北京时区格式）
     beijing_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # print("记录比对结果:", code1, code2, result)
+    
+    # 如果code1是列表，转换为逗号分隔的字符串
     if isinstance(code1, list):
         code1 = ','.join(code1)
+    # 如果code2是列表，转换为逗号分隔的字符串
     if isinstance(code2, list):
         code2 = ','.join(code2)
+    
+    # 执行SQL插入语句，将比对结果写入数据库
     c.execute("INSERT INTO CheckResults (code1, code2, result, timestamp, username) VALUES (?, ?, ?, ?, ?)", (code1, code2, result, beijing_time, username))
+    # 提交事务
     conn.commit()
+    # 关闭数据库连接
     conn.close()
 
 # 获取用户登录状态API
@@ -147,11 +171,21 @@ def logout():
 
 @app.route('/debug', methods=['POST'])
 def debug():
+    """调试接口
+    
+    接收POST请求，用于调试目的。获取请求中的JSON数据，
+    打印调试信息到控制台，然后返回成功响应。
+    
+    Returns:
+        str: 返回字符串 'ok' 表示请求已处理
+    """
     print("收到调试请求")
+    # 获取请求中的JSON数据
     data = request.get_json()
-    print(data['msg'])      # 这句就是输出到 VS Code 终端
+    # 打印调试信息
+    print(data['msg'])
     return 'ok'
 
 if __name__ == '__main__':
-    serve(app, host='0.0.0.0', port=8888)
-    # app.run(debug=True, host='0.0.0.0', port=8888)
+    # serve(app, host='0.0.0.0', port=8888)
+    app.run(debug=True, host='0.0.0.0', port=8888)
